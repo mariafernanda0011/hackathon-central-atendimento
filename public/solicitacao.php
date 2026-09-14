@@ -6,13 +6,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Central de Atendimento Emergencial</title>
 
-    <!-- Bootstrap 5 CSS -->
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 
-    <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
 
-    <!-- Estilos Customizados -->
     <link rel="stylesheet" href="css/style.css">
 </head>
 
@@ -86,7 +84,6 @@
                 <div class="card shadow-sm border-0">
                     <div class="card-body p-4 p-md-5">
 
-                        <!-- Cabeçalho -->
                         <div class="mb-4 text-center">
                             <h1 class="h3 fw-bold text-dark mb-2">
                                 <i class="bi bi-shield-exclamation text-danger me-2"></i>Central de Atendimento
@@ -104,10 +101,8 @@
                             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                         </div>
 
-                        <!-- Formulário de Solicitação -->
                         <form id="formulario-solicitacao" onsubmit="CriarSolicitacao(event); return false;">
 
-                            <!-- Nome Completo -->
                             <div class="mb-4">
                                 <label for="nome" class="form-label fw-semibold">
                                     <i class="bi bi-person me-1"></i>Nome Completo <span class="text-danger">*</span>
@@ -126,7 +121,6 @@
                                     placeholder="Descreva detalhadamente o ocorrido..." required></textarea>
                             </div>
 
-                            <!-- Contato -->
                             <div class="mb-4">
                                 <label for="telefone" class="form-label fw-semibold">
                                     <i class="bi bi-telephone me-1"></i>Telefone / Contato <span
@@ -137,7 +131,6 @@
                                     required>
                             </div>
 
-                            <!-- Endereço -->
                             <div class="mb-4">
                                 <label for="endereco" class="form-label fw-semibold">
                                     <i class="bi bi-geo-alt me-1"></i>Endereço <span class="text-danger">*</span>
@@ -146,7 +139,7 @@
                                     placeholder="Ex: Rua Principal, 123 - Bairro Centro" required>
                             </div>
 
-                            <!-- Classificação de Urgência -->
+
                             <div class="mb-3">
                                 <label class="form-label fw-semibold d-block">
                                     <i class="bi bi-exclamation-triangle me-1"></i>Nível de Urgência <span
@@ -157,7 +150,6 @@
 
                                 <div class="d-flex flex-column gap-2">
 
-                                    <!-- NORMAL -->
                                     <label
                                         class="priority-card border rounded p-3 d-flex align-items-start gap-3 cursor-pointer">
                                         <input type="radio" name="prioridade" value="Normal"
@@ -169,7 +161,7 @@
                                         </div>
                                     </label>
 
-                                    <!-- IMPORTANTE -->
+
                                     <label
                                         class="priority-card border rounded p-3 d-flex align-items-start gap-3 cursor-pointer">
                                         <input type="radio" name="prioridade" value="Importante"
@@ -208,7 +200,7 @@
         </div>
     </main>
 
-    <!-- Bootstrap 5 JS Bundle -->
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 
