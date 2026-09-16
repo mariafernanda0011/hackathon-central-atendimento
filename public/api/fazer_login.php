@@ -34,7 +34,7 @@ if ($email === $usuario_valido && $senha === $senha_valida) {
     ];
 
     // Redireciona para o Painel Administrativo
-    header("Location: /admin.php");
+    header("Location: /admin");
     exit();
 } else {
     // Credenciais incorretas: Armazena mensagem de erro e volta pro login
