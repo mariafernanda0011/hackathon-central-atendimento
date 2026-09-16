@@ -6,5 +6,5 @@ session_unset();
 session_destroy();
 
 // Redireciona de volta para a tela de login
-header("Location: /login.php");
+header("Location: /login");
 exit();

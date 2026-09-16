@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS solicitacoes (
     classe ENUM('Normal', 'Importante', 'Urgente') NOT NULL DEFAULT 'Normal',
     contato VARCHAR(50) NOT NULL,
     endereco VARCHAR(200) NOT NULL,
-    status ENUM('Pendente', 'Em Atendimento', 'Resolvido') NOT NULL DEFAULT 'Pendente',
+    status ENUM('Pendente', 'Em Atendimento', 'Concluído') NOT NULL DEFAULT 'Pendente',
     admin_id INT NULL, -- NULL se criado pelo público; ID do admin se criado ou assumido na área restrita
     data_criacao DATETIME DEFAULT CURRENT_TIMESTAMP,
     data_atualizacao DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,

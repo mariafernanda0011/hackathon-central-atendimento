@@ -1,44 +1,34 @@
 <?php
-session_start();
+    session_start();
 
-if (!isset($_SESSION['usuario_logado'])) {
-    header("Location: /login");
-    exit();
-}
+    if (!isset($_SESSION['usuario_logado'])) {
+        header("Location: /login");
+        exit();
+    }
+    // Conecta ao BD
+    require_once __DIR__ . '/../database/database_setup.php';
 
+    // Busca chamados e junta com a tabela administradores
+    $sql = "SELECT s.*, a.nome AS nome_admin 
+            FROM solicitacoes s 
+            LEFT JOIN administradores a ON s.admin_id = a.id 
+            ORDER BY s.id DESC";
+            
+    $stmt = $pdo->query($sql);
+    $solicitacoes = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-$solicitacoes = [
-    [
-        'id' => 1,
-        'solicitante' => 'Maria Fernanda Santos',
-        'descricao' => 'Deslizamento de terra próximo à residência com risco de desabamento.',
-        'telefone' => '(33) 99999-9999',
-        'endereco' => 'Rua Principal, 123 - Bairro Centro',
-        'prioridade' => 'Urgente',
-        'status' => 'Pendente',
-        'data' => '14/09/2026 08:30'
-    ],
-    [
-        'id' => 2,
-        'solicitante' => 'João Paulo Silva',
-        'descricao' => 'Árvore de grande porte com galhos caídos bloqueando a via pública.',
-        'telefone' => '(33) 98888-8888',
-        'endereco' => 'Av. Brasil, 450 - Bairro Novo',
-        'prioridade' => 'Importante',
-        'status' => 'Em Atendimento',
-        'data' => '14/09/2026 07:15'
-    ],
-    [
-        'id' => 3,
-        'solicitante' => 'Carlos Eduardo',
-        'descricao' => 'Dúvida quanto ao fornecimento de água potável no bairro.',
-        'telefone' => '(33) 97777-7777',
-        'endereco' => 'Rua das Flores, 88 - Bairro Alto',
-        'prioridade' => 'Normal',
-        'status' => 'Concluído',
-        'data' => '13/09/2026 18:40'
-    ]
-];
+    // Cálculo dinâmico dos contadores dos cards
+    $urgentes = 0;
+    $importantes = 0;
+    $normais = 0;
+
+    foreach ($solicitacoes as $chamado) {
+        if ($chamado['classe'] === 'Urgente') $urgentes++;
+        elseif ($chamado['classe'] === 'Importante') $importantes++;
+        elseif ($chamado['classe'] === 'Normal') $normais++;
+    }
+
+    $total_chamados = count($solicitacoes);
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -48,18 +38,12 @@ $solicitacoes = [
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Painel Administrativo - Central de Atendimento</title>
 
-
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-
-
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
-
-
     <link rel="stylesheet" href="css/style.css">
 </head>
 
 <body class="bg-light min-vh-100">
-
 
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm">
         <div class="container">
@@ -70,7 +54,7 @@ $solicitacoes = [
                 <span class="text-light small d-none d-sm-inline">
                     <i class="bi bi-person-circle me-1"></i> Operador
                 </span>
-                <a href="../actions/logout.php" class="btn btn-outline-light btn-sm">
+                <a href="/api/logout" class="btn btn-outline-light btn-sm">
                     <i class="bi bi-box-arrow-right me-1"></i> Sair
                 </a>
             </div>
@@ -79,23 +63,43 @@ $solicitacoes = [
 
     <main class="container py-4 py-md-5">
 
-
         <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-2">
             <div>
                 <h1 class="h3 fw-bold text-dark mb-1">
-                    <i class="bi bi-list-task text-primary me-2"></i>Gestão de Solicitacões
+                    <i class="bi bi-list-task text-primary me-2"></i>Gestão de Solicitações
                 </h1>
                 <p class="text-muted small mb-0">Triagem e acompanhamento dos chamados emergenciais cadastrados.</p>
             </div>
+            <button type="button" class="btn btn-primary btn-sm fw-bold" data-bs-toggle="modal"
+                data-bs-target="#modalNovoChamado">
+                <i class="bi bi-plus-lg me-1"></i> Nova Solicitação
+            </button>
         </div>
 
+        <div class="modal fade" id="modalNovoChamado" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-lg">
+                <div class="modal-content border-0 shadow">
+                    <div class="modal-header bg-dark text-white">
+                        <h5 class="modal-title h6 fw-bold">
+                            <i class="bi bi-plus-circle me-2"></i>Nova Solicitação
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                            aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body p-0" style="height: 500px;">
+                        <iframe src="/solicitacao" style="width: 100%; height: 100%; border: none;"></iframe>
+                    </div>
+                </div>
+            </div>
+        </div>
 
+        <!-- Cards com Resumo -->
         <div class="row g-3 mb-4">
             <div class="col-sm-6 col-lg-3">
                 <div class="card border-0 shadow-sm border-start border-danger border-4">
                     <div class="card-body">
                         <span class="text-muted small fw-semibold text-uppercase">Urgentes</span>
-                        <h3 class="fw-bold text-danger mt-1 mb-0">1</h3>
+                        <h3 class="fw-bold text-danger mt-1 mb-0"><?= $urgentes; ?></h3>
                     </div>
                 </div>
             </div>
@@ -103,7 +107,7 @@ $solicitacoes = [
                 <div class="card border-0 shadow-sm border-start border-warning border-4">
                     <div class="card-body">
                         <span class="text-muted small fw-semibold text-uppercase">Importantes</span>
-                        <h3 class="fw-bold text-warning mt-1 mb-0">1</h3>
+                        <h3 class="fw-bold text-warning mt-1 mb-0"><?= $importantes; ?></h3>
                     </div>
                 </div>
             </div>
@@ -111,7 +115,7 @@ $solicitacoes = [
                 <div class="card border-0 shadow-sm border-start border-info border-4">
                     <div class="card-body">
                         <span class="text-muted small fw-semibold text-uppercase">Normais</span>
-                        <h3 class="fw-bold text-info mt-1 mb-0">1</h3>
+                        <h3 class="fw-bold text-info mt-1 mb-0"><?= $normais; ?></h3>
                     </div>
                 </div>
             </div>
@@ -119,13 +123,13 @@ $solicitacoes = [
                 <div class="card border-0 shadow-sm border-start border-dark border-4">
                     <div class="card-body">
                         <span class="text-muted small fw-semibold text-uppercase">Total Chamados</span>
-                        <h3 class="fw-bold text-dark mt-1 mb-0">3</h3>
+                        <h3 class="fw-bold text-dark mt-1 mb-0"><?= $total_chamados; ?></h3>
                     </div>
                 </div>
             </div>
         </div>
 
-
+        <!-- Tabela de Chamados -->
         <div class="card border-0 shadow-sm">
             <div class="card-header bg-white py-3">
                 <h2 class="h6 fw-bold mb-0 text-dark">Chamados Recebidos</h2>
@@ -145,49 +149,70 @@ $solicitacoes = [
                             </tr>
                         </thead>
                         <tbody class="small">
+                            <?php if (empty($solicitacoes)): ?>
+                            <tr>
+                                <td colspan="7" class="text-center py-4 text-muted">Nenhuma solicitação cadastrada até o
+                                    momento.</td>
+                            </tr>
+                            <?php else: ?>
                             <?php foreach ($solicitacoes as $chamado): ?>
-                                <tr>
-                                    <td class="ps-4 text-nowrap text-muted"><?= $chamado['data']; ?></td>
-                                    <td class="fw-semibold text-dark"><?= htmlspecialchars($chamado['solicitante']); ?></td>
-                                    <td>
-                                        <div style="max-width: 250px;" class="text-truncate" title="<?= htmlspecialchars($chamado['descricao']); ?>">
-                                            <?= htmlspecialchars($chamado['descricao']); ?>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div><i class="bi bi-telephone me-1 text-muted"></i><?= htmlspecialchars($chamado['telefone']); ?></div>
-                                        <div class="text-muted"><i class="bi bi-geo-alt me-1"></i><?= htmlspecialchars($chamado['endereco']); ?></div>
-                                    </td>
-                                    <td>
-                                        <?php if ($chamado['prioridade'] === 'Urgente'): ?>
-                                            <span class="badge bg-danger">URGENTE</span>
-                                        <?php elseif ($chamado['prioridade'] === 'Importante'): ?>
-                                            <span class="badge bg-warning text-dark">IMPORTANTE</span>
-                                        <?php else: ?>
-                                            <span class="badge bg-info text-dark">NORMAL</span>
-                                        <?php endif; ?>
-                                    </td>
-                                    <td>
+                            <tr id="linha-<?= $chamado['id']; ?>">
+                                <td class="ps-4 text-nowrap text-muted">
+                                    <?= date('d/m/Y H:i', strtotime($chamado['data_criacao'])); ?>
+                                </td>
+                                <td class="fw-semibold text-dark"><?= htmlspecialchars($chamado['nome_solicitante']); ?>
+                                </td>
+                                <td>
+                                    <div style="max-width: 230px;" class="text-truncate"
+                                        title="<?= htmlspecialchars($chamado['descricao']); ?>">
+                                        <?= htmlspecialchars($chamado['descricao']); ?>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div><i
+                                            class="bi bi-telephone me-1 text-muted"></i><?= htmlspecialchars($chamado['contato']); ?>
+                                    </div>
+                                    <div class="text-muted"><i
+                                            class="bi bi-geo-alt me-1"></i><?= htmlspecialchars($chamado['endereco']); ?>
+                                    </div>
+                                </td>
+                                <td>
+                                    <?php if ($chamado['classe'] === 'Urgente'): ?>
+                                    <span class="badge bg-danger">URGENTE</span>
+                                    <?php elseif ($chamado['classe'] === 'Importante'): ?>
+                                    <span class="badge bg-warning text-dark">IMPORTANTE</span>
+                                    <?php else: ?>
+                                    <span class="badge bg-info text-dark">NORMAL</span>
+                                    <?php endif; ?>
+                                </td>
+                                <td>
+                                    <span class="badge-status-<?= $chamado['id']; ?>">
                                         <?php if ($chamado['status'] === 'Pendente'): ?>
-                                            <span class="badge bg-secondary">Pendente</span>
+                                        <span class="badge bg-secondary">Pendente</span>
                                         <?php elseif ($chamado['status'] === 'Em Atendimento'): ?>
-                                            <span class="badge bg-primary">Em Atendimento</span>
+                                        <span class="badge bg-primary">Em Atendimento</span>
                                         <?php else: ?>
-                                            <span class="badge bg-success">Concluído</span>
+                                        <span class="badge bg-success">Concluído</span>
                                         <?php endif; ?>
-                                    </td>
-                                    <td class="text-end pe-4">
-                                        <div class="btn-group btn-group-sm" role="group">
-                                            <button type="button" class="btn btn-outline-secondary" title="Ver Detalhes">
-                                                <i class="bi bi-eye"></i>
-                                            </button>
-                                            <button type="button" class="btn btn-outline-primary" title="Alterar Status">
-                                                <i class="bi bi-pencil"></i>
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
+                                    </span>
+                                </td>
+                                <td class="text-end pe-4">
+                                    <div class="btn-group btn-group-sm" role="group">
+                                        <!-- Botão Ver Detalhes (Olho) -->
+                                        <button type="button" class="btn btn-outline-secondary" title="Ver Detalhes"
+                                            onclick='abrirModalDetalhes(<?= json_encode($chamado, JSON_HEX_APOS | JSON_HEX_QUOT); ?>)'>
+                                            <i class="bi bi-eye"></i>
+                                        </button>
+                                        <!-- Botão Alterar Status (Lápis) -->
+                                        <button type="button" class="btn btn-outline-primary" title="Alterar Status"
+                                            onclick="abrirModalStatus(<?= $chamado['id']; ?>, '<?= $chamado['status']; ?>')">
+                                            <i class="bi bi-pencil"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
                             <?php endforeach; ?>
+                            <?php endif; ?>
                         </tbody>
                     </table>
                 </div>
@@ -196,7 +221,209 @@ $solicitacoes = [
 
     </main>
 
+    <!-- MODAL 1: Ver Detalhes do Chamado -->
+    <div class="modal fade" id="modalDetalhes" tabindex="-1" aria-labelledby="modalDetalhesLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-dark text-white">
+                    <h5 class="modal-title h6 fw-bold" id="modalDetalhesLabel">
+                        <i class="bi bi-card-heading me-2"></i>Detalhes da Solicitação #<span id="detalhes-id"></span>
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <strong class="text-muted d-block small">Solicitante:</strong>
+                            <span id="detalhes-solicitante" class="fs-6 fw-semibold text-dark"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <strong class="text-muted d-block small">Data e Hora de Registro:</strong>
+                            <span id="detalhes-data" class="text-dark"></span>
+                        </div>
+
+                        <!-- NOVO CAMPO: Administrador Responsável -->
+                        <div class="col-md-6">
+                            <strong class="text-muted d-block small">Cadastrado Por :</strong>
+                            <span id="detalhes-admin" class="text-dark fw-semibold"></span>
+                        </div>
+
+                        <div class="col-md-6">
+                            <strong class="text-muted d-block small">Contato / Telefone:</strong>
+                            <span id="detalhes-contato" class="text-dark"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <strong class="text-muted d-block small">Nível de Urgência:</strong>
+                            <div id="detalhes-urgencia" class="mt-1"></div>
+                        </div>
+                        <div class="col-md-6">
+                            <strong class="text-muted d-block small">Status Atual:</strong>
+                            <div id="detalhes-status" class="mt-1"></div>
+                        </div>
+                    </div>
+
+                    <hr class="text-muted my-3">
+
+                    <div class="mb-3">
+                        <strong class="text-muted d-block small mb-1">Endereço da Ocorrência:</strong>
+                        <div class="p-2 bg-light rounded border text-dark">
+                            <i class="bi bi-geo-alt-fill text-danger me-1"></i><span id="detalhes-endereco"></span>
+                        </div>
+                    </div>
+
+                    <div>
+                        <strong class="text-muted d-block small mb-1">Descrição Completa do Chamado:</strong>
+                        <div class="p-3 bg-light rounded border text-dark"
+                            style="white-space: pre-line; max-height: 200px; overflow-y: auto;" id="detalhes-descricao">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Fechar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 2: Alterar Status da Solicitação -->
+    <div class="modal fade" id="modalStatus" tabindex="-1" aria-labelledby="modalStatusLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title h6 fw-bold" id="modalStatusLabel">
+                        <i class="bi bi-pencil-square me-2"></i>Alterar Status da Solicitação
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+                </div>
+                <form id="formAlterarStatus" onsubmit="salvarStatus(event)">
+                    <div class="modal-body p-4">
+                        <input type="hidden" id="status-chamado-id">
+
+                        <div class="mb-3">
+                            <label for="select-status" class="form-label fw-semibold">Selecione o novo status:</label>
+                            <select id="select-status" class="form-select" required>
+                                <option value="Pendente">Pendente</option>
+                                <option value="Em Atendimento">Em Atendimento</option>
+                                <option value="Concluído">Concluído</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="modal-footer bg-light">
+                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary btn-sm fw-bold">Salvar Alteração</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+    // Instâncias dos Modais Bootstrap
+    const modalDetalhes = new bootstrap.Modal(document.getElementById('modalDetalhes'));
+    const modalStatus = new bootstrap.Modal(document.getElementById('modalStatus'));
+
+    // Preenche e abre o modal de Detalhes
+    function abrirModalDetalhes(chamado) {
+        document.getElementById('detalhes-id').textContent = chamado.id;
+        document.getElementById('detalhes-solicitante').textContent = chamado.nome_solicitante;
+        document.getElementById('detalhes-contato').textContent = chamado.contato;
+        document.getElementById('detalhes-endereco').textContent = chamado.endereco;
+        document.getElementById('detalhes-descricao').textContent = chamado.descricao;
+
+        // Exibe o operador responsável ou indica solicitação pública
+        const elemAdmin = document.getElementById('detalhes-admin');
+        if (chamado.nome_admin) {
+            elemAdmin.innerHTML = `<i class="bi bi-person-badge text-primary me-1"></i> ${chamado.nome_admin}`;
+        } else if (chamado.admin_id) {
+            elemAdmin.innerHTML = `<i class="bi bi-person-badge text-primary me-1"></i> Admin #${chamado.admin_id}`;
+        } else {
+            elemAdmin.innerHTML = `<span class="badge bg-light text-secondary border">Cidadão Público</span>`;
+        }
+
+        // Formatação de Data
+        const dataObj = new Date(chamado.data_criacao);
+        document.getElementById('detalhes-data').textContent = dataObj.toLocaleString('pt-BR');
+
+        // Badge de Urgência
+        let badgeUrgencia = '';
+        if (chamado.classe === 'Urgente') badgeUrgencia = '<span class="badge bg-danger">URGENTE</span>';
+        else if (chamado.classe === 'Importante') badgeUrgencia =
+            '<span class="badge bg-warning text-dark">IMPORTANTE</span>';
+        else badgeUrgencia = '<span class="badge bg-info text-dark">NORMAL</span>';
+        document.getElementById('detalhes-urgencia').innerHTML = badgeUrgencia;
+
+        // Badge de Status
+        let badgeStatus = '';
+        if (chamado.status === 'Pendente') badgeStatus = '<span class="badge bg-secondary">Pendente</span>';
+        else if (chamado.status === 'Em Atendimento') badgeStatus =
+            '<span class="badge bg-primary">Em Atendimento</span>';
+        else badgeStatus = '<span class="badge bg-success">Concluído</span>';
+        document.getElementById('detalhes-status').innerHTML = badgeStatus;
+
+        modalDetalhes.show();
+    }
+
+    // Abre o modal de alteração de Status
+    function abrirModalStatus(id, statusAtual) {
+        document.getElementById('status-chamado-id').value = id;
+        document.getElementById('select-status').value = statusAtual;
+        modalStatus.show();
+    }
+
+    // Envia a alteração do status para o servidor via Fetch API
+    function salvarStatus(event) {
+        event.preventDefault();
+
+        const id = document.getElementById('status-chamado-id').value;
+        const novoStatus = document.getElementById('select-status').value;
+
+        const formData = new FormData();
+        formData.append('id', id);
+        formData.append('status', novoStatus);
+
+        // Endpoint atualizado para o nome correto do seu arquivo
+        fetch('api/atualizar_status.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(err => {
+                        throw new Error(err.erro || 'Erro HTTP ' + response.status);
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.sucesso) {
+                    // Atualiza a badge de status na linha da tabela dinamicamente
+                    const containerBadge = document.querySelector(`.badge-status-${id}`);
+                    if (containerBadge) {
+                        if (novoStatus === 'Pendente') {
+                            containerBadge.innerHTML = '<span class="badge bg-secondary">Pendente</span>';
+                        } else if (novoStatus === 'Em Atendimento') {
+                            containerBadge.innerHTML = '<span class="badge bg-primary">Em Atendimento</span>';
+                        } else {
+                            containerBadge.innerHTML = '<span class="badge bg-success">Concluído</span>';
+                        }
+                    }
+
+                    // Fecha o modal após a atualização
+                    modalStatus.hide();
+                } else {
+                    alert('Erro: ' + (data.erro || 'Não foi possível alterar o status.'));
+                }
+            })
+            .catch(err => {
+                console.error('Erro na requisição:', err);
+                alert('Erro ao processar requisição: ' + err.message);
+            });
+    }
+    </script>
 </body>
 
 </html>

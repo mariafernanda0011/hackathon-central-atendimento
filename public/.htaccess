@@ -1,12 +1,13 @@
 RewriteEngine On
+RewriteBase /
 
 # Pages
-RewriteRule ^solicitacao/?$ ./solicitacao.php [NC,L]
-RewriteRule ^login/?$ ./login.php [NC,L]
-RewriteRule ^admin/?$ ./admin.php [NC,L]
+RewriteRule ^solicitacao/?$ solicitacao.php [NC,L]
+RewriteRule ^login/?$ login.php [NC,L]
+RewriteRule ^admin/?$ admin.php [NC,L]
 
 # Api
-RewriteRule ^api/criar-solicitacao/?$ ./api/criar_solicitacao.php [QSA,L]
-RewriteRule ^api/atualizar-status/?$ ./api/atualizar_status.php [QSA,L]
-RewriteRule ^api/login/?$ ./api/fazer_login.php [QSA,L]
-RewriteRule ^api/logout/?$ ./api/logout.php [QSA,L]
+RewriteRule ^api/criar-solicitacao/?$ api/criar_solicitacao.php [QSA,L]
+RewriteRule ^api/atualizar-status/?$ api/atualizar_status.php [QSA,L]
+RewriteRule ^api/login/?$ api/fazer_login.php [QSA,L]
+RewriteRule ^api/logout/?$ api/logout.php [QSA,L]
