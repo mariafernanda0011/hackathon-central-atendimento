@@ -1,3 +1,4 @@
 config/database.php
+database/database_setup.php
 .env
 seeder.php
