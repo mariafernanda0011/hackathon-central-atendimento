@@ -1,44 +1,52 @@
 <?php
+    session_start();
 
-session_start();
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+        header("Location: ../login.php");
+        exit();
+    }
 
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    header("Location: ../login.php");
-    exit();
-}
+    $dbPath = __DIR__ . '/../../database/database_setup.php';
 
-$email = filter_input(INPUT_POST, 'email', FILTER_SANITIZE_EMAIL);
-$senha = $_POST['senha'] ?? '';
+    if (file_exists($dbPath)) {
+        require_once $dbPath;
+    } else {
+        die("Erro interno: Arquivo de conexão com o banco não foi encontrado.");
+    }
 
-if (empty($email) || empty($senha)) {
-    $_SESSION['erro_login'] = "Preencha todos os campos!";
-    header("Location: /login.php");
-    exit();
-}
+    $email = filter_input(INPUT_POST, 'email', FILTER_SANITIZE_EMAIL);
+    $senha = $_POST['senha'] ?? '';
 
-/* 
- * --------------------------------------------------------------------------
- * AUTENTICAÇÃO
- * --------------------------------------------------------------------------
- * Nota: Aqui você pode substituir pela consulta PDO no seu banco de dados.
- * Exemplo fictício de credencial para testes:
- */
-$usuario_valido = "admin@central.local";
-$senha_valida = "admin123"; // Em produção, use password_verify() com hash!
+    if (empty($email) || empty($senha)) {
+        $_SESSION['erro_login'] = "Preencha todos os campos!";
+        header("Location: /login.php");
+        exit();
+    }
 
-if ($email === $usuario_valido && $senha === $senha_valida) {
+    // Busca o administrador cadastrado no banco de dados
+    $stmt = $pdo->prepare("SELECT id, nome, email, senha FROM administradores WHERE email = :email LIMIT 1");
+    $stmt->execute([':email' => $email]);
+    $admin = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    // Valida se o usuário existe e se a senha bate com o hash criptografado
+    if ($admin && password_verify($senha, $admin['senha'])) {
+    
+    session_regenerate_id(true);
+    
     // Credenciais corretas: Cria a variável de sessão esperada pelo admin.php
-    $_SESSION['usuario_logado'] = [
-        'email' => $email,
-        'nome'  => 'Operador Central'
-    ];
+        $_SESSION['usuario_logado'] = [
+            'id' => $admin['id'],
+            'nome' => $admin['nome'],
+            'email'  => $admin['email']
+        ];
 
-    // Redireciona para o Painel Administrativo
-    header("Location: /admin.php");
-    exit();
-} else {
-    // Credenciais incorretas: Armazena mensagem de erro e volta pro login
-    $_SESSION['erro_login'] = "E-mail ou senha incorretos!";
-    header("Location: /login.php?erro=1");
-    exit();
-}
+        // Redireciona para o Painel Administrativo
+        header("Location: /admin.php");
+        exit();
+    } else {
+        // Credenciais incorretas: Armazena mensagem de erro e volta pro login
+        $_SESSION['erro_login'] = "E-mail ou senha incorretos!";
+        header("Location: /login.php?erro=1");
+        exit();
+    }
+?>

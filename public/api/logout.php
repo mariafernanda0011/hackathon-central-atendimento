@@ -1,10 +1,11 @@
 <?php
-session_start();
+    session_start();
 
-// Destrói todas as variáveis de sessão
-session_unset();
-session_destroy();
+    // Destrói todas as variáveis de sessão
+    session_unset();
+    session_destroy();
 
-// Redireciona de volta para a tela de login
-header("Location: /login");
-exit();
+    // Redireciona de volta para a tela de login
+    header("Location: /login");
+    exit();
+?>

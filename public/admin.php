@@ -86,7 +86,7 @@
                         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
                             aria-label="Close"></button>
                     </div>
-                    <div class="modal-body p-0" style="height: 500px;">
+                    <div class="modal-body p-0" style="height: 700px;">
                         <iframe src="/solicitacao" style="width: 100%; height: 100%; border: none;"></iframe>
                     </div>
                 </div>
@@ -151,67 +151,66 @@
                         <tbody class="small">
                             <?php if (empty($solicitacoes)): ?>
                             <tr>
-                                <td colspan="7" class="text-center py-4 text-muted">Nenhuma solicitação cadastrada até o
-                                    momento.</td>
+                                <td colspan="7" class="text-center py-4 text-muted">Nenhuma solicitação cadastrada até o momento.</td>
                             </tr>
                             <?php else: ?>
-                            <?php foreach ($solicitacoes as $chamado): ?>
-                            <tr id="linha-<?= $chamado['id']; ?>">
-                                <td class="ps-4 text-nowrap text-muted">
-                                    <?= date('d/m/Y H:i', strtotime($chamado['data_criacao'])); ?>
-                                </td>
-                                <td class="fw-semibold text-dark"><?= htmlspecialchars($chamado['nome_solicitante']); ?>
-                                </td>
-                                <td>
-                                    <div style="max-width: 230px;" class="text-truncate"
-                                        title="<?= htmlspecialchars($chamado['descricao']); ?>">
-                                        <?= htmlspecialchars($chamado['descricao']); ?>
-                                    </div>
-                                </td>
-                                <td>
-                                    <div><i
-                                            class="bi bi-telephone me-1 text-muted"></i><?= htmlspecialchars($chamado['contato']); ?>
-                                    </div>
-                                    <div class="text-muted"><i
-                                            class="bi bi-geo-alt me-1"></i><?= htmlspecialchars($chamado['endereco']); ?>
-                                    </div>
-                                </td>
-                                <td>
-                                    <?php if ($chamado['classe'] === 'Urgente'): ?>
-                                    <span class="badge bg-danger">URGENTE</span>
-                                    <?php elseif ($chamado['classe'] === 'Importante'): ?>
-                                    <span class="badge bg-warning text-dark">IMPORTANTE</span>
-                                    <?php else: ?>
-                                    <span class="badge bg-info text-dark">NORMAL</span>
-                                    <?php endif; ?>
-                                </td>
-                                <td>
-                                    <span class="badge-status-<?= $chamado['id']; ?>">
-                                        <?php if ($chamado['status'] === 'Pendente'): ?>
-                                        <span class="badge bg-secondary">Pendente</span>
-                                        <?php elseif ($chamado['status'] === 'Em Atendimento'): ?>
-                                        <span class="badge bg-primary">Em Atendimento</span>
+                                <?php foreach ($solicitacoes as $chamado): ?>
+                                <tr id="linha-<?= $chamado['id']; ?>">
+                                    <td class="ps-4 text-nowrap text-muted">
+                                        <?= date('d/m/Y H:i', strtotime($chamado['data_criacao'])); ?>
+                                    </td>
+                                    <td class="fw-semibold text-dark"><?= htmlspecialchars($chamado['nome_solicitante']); ?>
+                                    </td>
+                                    <td>
+                                        <div style="max-width: 230px;" class="text-truncate"
+                                            title="<?= htmlspecialchars($chamado['descricao']); ?>">
+                                            <?= htmlspecialchars($chamado['descricao']); ?>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div><i
+                                                class="bi bi-telephone me-1 text-muted"></i><?= htmlspecialchars($chamado['contato']); ?>
+                                        </div>
+                                        <div class="text-muted"><i
+                                                class="bi bi-geo-alt me-1"></i><?= htmlspecialchars($chamado['endereco']); ?>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <?php if ($chamado['classe'] === 'Urgente'): ?>
+                                        <span class="badge bg-danger">URGENTE</span>
+                                        <?php elseif ($chamado['classe'] === 'Importante'): ?>
+                                        <span class="badge bg-warning text-dark">IMPORTANTE</span>
                                         <?php else: ?>
-                                        <span class="badge bg-success">Concluído</span>
+                                        <span class="badge bg-info text-dark">NORMAL</span>
                                         <?php endif; ?>
-                                    </span>
-                                </td>
-                                <td class="text-end pe-4">
-                                    <div class="btn-group btn-group-sm" role="group">
-                                        <!-- Botão Ver Detalhes (Olho) -->
-                                        <button type="button" class="btn btn-outline-secondary" title="Ver Detalhes"
-                                            onclick='abrirModalDetalhes(<?= json_encode($chamado, JSON_HEX_APOS | JSON_HEX_QUOT); ?>)'>
-                                            <i class="bi bi-eye"></i>
-                                        </button>
-                                        <!-- Botão Alterar Status (Lápis) -->
-                                        <button type="button" class="btn btn-outline-primary" title="Alterar Status"
-                                            onclick="abrirModalStatus(<?= $chamado['id']; ?>, '<?= $chamado['status']; ?>')">
-                                            <i class="bi bi-pencil"></i>
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                            <?php endforeach; ?>
+                                    </td>
+                                    <td>
+                                        <span class="badge-status-<?= $chamado['id']; ?>">
+                                            <?php if ($chamado['status'] === 'Pendente'): ?>
+                                            <span class="badge bg-secondary">Pendente</span>
+                                            <?php elseif ($chamado['status'] === 'Em Atendimento'): ?>
+                                            <span class="badge bg-primary">Em Atendimento</span>
+                                            <?php else: ?>
+                                            <span class="badge bg-success">Concluído</span>
+                                            <?php endif; ?>
+                                        </span>
+                                    </td>
+                                    <td class="text-end pe-4">
+                                        <div class="btn-group btn-group-sm" role="group">
+                                            <!-- Botão Ver Detalhes (Olho) -->
+                                            <button type="button" class="btn btn-outline-secondary" title="Ver Detalhes"
+                                                onclick='abrirModalDetalhes(<?= json_encode($chamado, JSON_HEX_APOS | JSON_HEX_QUOT); ?>)'>
+                                                <i class="bi bi-eye"></i>
+                                            </button>
+                                            <!-- Botão Alterar Status (Lápis) -->
+                                            <button type="button" class="btn btn-outline-primary" title="Alterar Status"
+                                                onclick="abrirModalStatus(<?= $chamado['id']; ?>, '<?= $chamado['status']; ?>')">
+                                                <i class="bi bi-pencil"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <?php endforeach; ?>
                             <?php endif; ?>
                         </tbody>
                     </table>
@@ -319,111 +318,12 @@
         </div>
     </div>
 
+    <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
     <script>
-    // Instâncias dos Modais Bootstrap
-    const modalDetalhes = new bootstrap.Modal(document.getElementById('modalDetalhes'));
-    const modalStatus = new bootstrap.Modal(document.getElementById('modalStatus'));
-
-    // Preenche e abre o modal de Detalhes
-    function abrirModalDetalhes(chamado) {
-        document.getElementById('detalhes-id').textContent = chamado.id;
-        document.getElementById('detalhes-solicitante').textContent = chamado.nome_solicitante;
-        document.getElementById('detalhes-contato').textContent = chamado.contato;
-        document.getElementById('detalhes-endereco').textContent = chamado.endereco;
-        document.getElementById('detalhes-descricao').textContent = chamado.descricao;
-
-        // Exibe o operador responsável ou indica solicitação pública
-        const elemAdmin = document.getElementById('detalhes-admin');
-        if (chamado.nome_admin) {
-            elemAdmin.innerHTML = `<i class="bi bi-person-badge text-primary me-1"></i> ${chamado.nome_admin}`;
-        } else if (chamado.admin_id) {
-            elemAdmin.innerHTML = `<i class="bi bi-person-badge text-primary me-1"></i> Admin #${chamado.admin_id}`;
-        } else {
-            elemAdmin.innerHTML = `<span class="badge bg-light text-secondary border">Cidadão Público</span>`;
-        }
-
-        // Formatação de Data
-        const dataObj = new Date(chamado.data_criacao);
-        document.getElementById('detalhes-data').textContent = dataObj.toLocaleString('pt-BR');
-
-        // Badge de Urgência
-        let badgeUrgencia = '';
-        if (chamado.classe === 'Urgente') badgeUrgencia = '<span class="badge bg-danger">URGENTE</span>';
-        else if (chamado.classe === 'Importante') badgeUrgencia =
-            '<span class="badge bg-warning text-dark">IMPORTANTE</span>';
-        else badgeUrgencia = '<span class="badge bg-info text-dark">NORMAL</span>';
-        document.getElementById('detalhes-urgencia').innerHTML = badgeUrgencia;
-
-        // Badge de Status
-        let badgeStatus = '';
-        if (chamado.status === 'Pendente') badgeStatus = '<span class="badge bg-secondary">Pendente</span>';
-        else if (chamado.status === 'Em Atendimento') badgeStatus =
-            '<span class="badge bg-primary">Em Atendimento</span>';
-        else badgeStatus = '<span class="badge bg-success">Concluído</span>';
-        document.getElementById('detalhes-status').innerHTML = badgeStatus;
-
-        modalDetalhes.show();
-    }
-
-    // Abre o modal de alteração de Status
-    function abrirModalStatus(id, statusAtual) {
-        document.getElementById('status-chamado-id').value = id;
-        document.getElementById('select-status').value = statusAtual;
-        modalStatus.show();
-    }
-
-    // Envia a alteração do status para o servidor via Fetch API
-    function salvarStatus(event) {
-        event.preventDefault();
-
-        const id = document.getElementById('status-chamado-id').value;
-        const novoStatus = document.getElementById('select-status').value;
-
-        const formData = new FormData();
-        formData.append('id', id);
-        formData.append('status', novoStatus);
-
-        // Endpoint atualizado para o nome correto do seu arquivo
-        fetch('api/atualizar_status.php', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => {
-                if (!response.ok) {
-                    return response.json().then(err => {
-                        throw new Error(err.erro || 'Erro HTTP ' + response.status);
-                    });
-                }
-                return response.json();
-            })
-            .then(data => {
-                if (data.sucesso) {
-                    // Atualiza a badge de status na linha da tabela dinamicamente
-                    const containerBadge = document.querySelector(`.badge-status-${id}`);
-                    if (containerBadge) {
-                        if (novoStatus === 'Pendente') {
-                            containerBadge.innerHTML = '<span class="badge bg-secondary">Pendente</span>';
-                        } else if (novoStatus === 'Em Atendimento') {
-                            containerBadge.innerHTML = '<span class="badge bg-primary">Em Atendimento</span>';
-                        } else {
-                            containerBadge.innerHTML = '<span class="badge bg-success">Concluído</span>';
-                        }
-                    }
-
-                    // Fecha o modal após a atualização
-                    modalStatus.hide();
-                } else {
-                    alert('Erro: ' + (data.erro || 'Não foi possível alterar o status.'));
-                }
-            })
-            .catch(err => {
-                console.error('Erro na requisição:', err);
-                alert('Erro ao processar requisição: ' + err.message);
-            });
-    }
+        const solicitaesData = <?= json_encode($solicitacoes, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>;
     </script>
+    <script src="js/painel_admin.js"></script>
 </body>
 
 </html>
