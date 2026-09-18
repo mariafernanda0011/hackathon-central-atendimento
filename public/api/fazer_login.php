@@ -40,13 +40,12 @@
             'email'  => $admin['email']
         ];
 
-        // Redireciona para o Painel Administrativo
-        header("Location: /admin.php");
-        exit();
-    } else {
-        // Credenciais incorretas: Armazena mensagem de erro e volta pro login
-        $_SESSION['erro_login'] = "E-mail ou senha incorretos!";
-        header("Location: /login.php?erro=1");
-        exit();
-    }
-?>
+    // Redireciona para o Painel Administrativo
+    header("Location: /admin");
+    exit();
+} else {
+    // Credenciais incorretas: Armazena mensagem de erro e volta pro login
+    $_SESSION['erro_login'] = "E-mail ou senha incorretos!";
+    header("Location: /login.php?erro=1");
+    exit();
+}
