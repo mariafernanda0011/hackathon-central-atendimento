@@ -2,15 +2,12 @@
 
 Sistema web desenvolvido em PHP e MySQL/MariaDB para gerenciamento e triagem de solicitações emergenciais com controle de acesso administrativo.
 
----
-
 ## 📋 Sobre o Projeto
 
 O projeto consiste em uma **Central de Atendimento Emergencial** onde:
 * O público geral pode enviar solicitações de emergência sem necessidade de login, categorizadas por níveis de prioridade (`Normal`, `Importante`, `Urgente`).
 * A equipe de administração possui uma área restrita para visualizar, assumir e atualizar o status das chamadas (`Pendente`, `Em Atendimento`, `Resolvido`).
 
----
 
 ## 🛠️ Requisitos Prévios
 
@@ -20,7 +17,6 @@ Certifique-se de ter os seguintes recursos instalados em seu ambiente local:
 * **Banco de Dados:** MySQL ou MariaDB
 * **Controle de Versão:** Git
 
----
 
 ## 🚀 Passo a Passo para Configuração Local
 
@@ -32,14 +28,15 @@ Abra o terminal no diretório raiz do seu servidor web (ex: `/var/www/` no Linux
 
 ```bash
 git clone [https://github.com/mariafernanda0011/hackathon-central-atendimento.git](https://github.com/mariafernanda0011/hackathon-central-atendimento.git) central.local
+```
+```bash
 cd central.local
 ```
-
 ---
 
 ### 2. Criar o Banco de Dados
 
-Importe o arquivo `schema.sql` para criar o banco de dados `central_atendimento` e suas respectivas tabelas (`administradores` e `solicitacoes`).
+Importe o arquivo `schema.sql` para criar o banco de dados `central_atendimento` e suas respectivas tabelas.
 
 * **Opção A — Linux (Terminal):**
   ```bash
@@ -54,29 +51,13 @@ Importe o arquivo `schema.sql` para criar o banco de dados `central_atendimento`
 
 ---
 
-### 3. Configurar Conexão com o Banco (`config/database.php`)
+### 3. Configurar Conexão com o Banco (`database/database_setup.php`)
 
-Por razões de segurança, as credenciais de acesso ao banco não são versionadas no Git. Cada desenvolvedor deve criar seu próprio arquivo de conexão local.
+Por razões de segurança, as credenciais de acesso ao banco não são versionadas no Git. Cada desenvolvedor deve criar seu próprio arquivo de conexão local a partir do modelo disponibilizado.
 
-Crie o arquivo `config/database.php` e adicione o código abaixo (ajuste usuário e senha se necessário):
+1. Duplique o arquivo de exemplo dentro da pasta `database/`
 
-```php
-<?php
-$host = 'localhost';
-$dbname = 'central_atendimento';
-$username = 'root';
-$password = ''; // Coloque a senha do seu banco de dados local, se houver
-
-try {
-    $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8mb4", $username, $password, [
-        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-        PDO::ATTR_EMULATE_PREPARES => false,
-    ]);
-} catch (PDOException $e) {
-    die("Erro na conexão com o banco de dados: " . $e->getMessage());
-}
-```
+2. Se necessário, abra o arquivo `database/database_setup.php` e ajuste o usuário e a senha de acordo com o seu ambiente local:
 
 ---
 
@@ -88,35 +69,43 @@ Como a tabela de administradores é iniciada vazia, crie um arquivo temporário 
 
 ```php
 <?php
-require_once __DIR__ . '/config/database.php';
+    require_once __DIR__ . '/config/database.php';
 
-$nome = 'Administrador Local';
-$email = 'admin@central.local';
-$senhaTextoPuro = 'admin123';
+    $nome = 'Administrador Local';
+    $email = 'admin@central.local';
+    $senhaTextoPuro = 'admin123';
 
-$senhaHash = password_hash($senhaTextoPuro, PASSWORD_BCRYPT);
+    $senhaHash = password_hash($senhaTextoPuro, PASSWORD_DEFAULT);
 
-try {
-    $stmt = $pdo->prepare("INSERT INTO administradores (nome, email, senha) VALUES (:nome, :email, :senha)");
-    $stmt->execute([
-        ':nome'  => $nome,
-        ':email' => $email,
-        ':senha' => $senhaHash
-    ]);
-    echo "Administrador criado com sucesso!\n";
-    echo "Email: admin@central.local\n";
-    echo "Senha: admin123\n";
-} catch (PDOException $e) {
-    echo "Erro ao criar administrador: " . $e->getMessage() . "\n";
-}
+    try {
+        $checkStmt = $pdo->prepare("SELECT id FROM administradores WHERE email = :email LIMIT 1");
+        $checkStmt->execute([':email' => $email]);
+
+        if ($checkStmt -> fetch()){
+            echo "AVISO: O Administrador ($email) já está cadastrado no banco de dados. <br>\n";
+        } else {
+            $stmt = $pdo->prepare("INSERT INTO administradores (nome, email, senha) VALUES (:nome, :email, :senha)");
+            $stmt->execute([
+                ':nome'  => $nome,
+                ':email' => $email,
+                ':senha' => $senhaHash
+            ]);
+            echo "Administrador criado com sucesso!\n";
+            echo "Email: admin@central.local\n";
+            echo "Senha: admin123\n";
+        }
+    } catch (PDOException $e) {
+        echo "Erro ao criar administrador: " . $e->getMessage() . "\n";
+    }
+
+?>
 ```
 
-2. Execute o arquivo no terminal para cadastrar o usuário:
+2. Execute o comando no terminal a partir da raiz do projeto para cadastrar o usuário: 
 
 ```bash
 php seeder.php
 ```
-
 ---
 
 ### 5. Configurar Virtual Host no Apache (Apenas Linux)
