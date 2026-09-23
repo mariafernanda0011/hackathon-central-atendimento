@@ -24,23 +24,23 @@
     }
 
     // Busca o administrador cadastrado no banco de dados
-    $stmt = $pdo->prepare("SELECT id, nome, email, senha FROM administradores WHERE email = :email LIMIT 1");
+    $stmt = $pdo->prepare("SELECT id, nome, email, senha, tipo, setor_id
+                       FROM administradores WHERE email = :email LIMIT 1");
     $stmt->execute([':email' => $email]);
     $admin = $stmt->fetch(PDO::FETCH_ASSOC);
 
     // Valida se o usuário existe e se a senha bate com o hash criptografado
     if ($admin && password_verify($senha, $admin['senha'])) {
-    
     session_regenerate_id(true);
-    
-    // Credenciais corretas: Cria a variável de sessão esperada pelo admin.php
-        $_SESSION['usuario_logado'] = [
-            'id' => $admin['id'],
-            'nome' => $admin['nome'],
-            'email'  => $admin['email']
-        ];
 
-    // Redireciona para o Painel Administrativo
+    $_SESSION['usuario_logado'] = [
+        'id'       => (int)$admin['id'],
+        'nome'     => $admin['nome'],
+        'email'    => $admin['email'],
+        'tipo'     => $admin['tipo'],      // 'geral' ou 'setor'
+        'setor_id' => $admin['setor_id'] ? (int)$admin['setor_id'] : null,
+    ];
+
     header("Location: /admin");
     exit();
 } else {
