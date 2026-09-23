@@ -1,3 +1,9 @@
+<?php
+require_once __DIR__ . '/../database/database_setup.php';
+$setores = $pdo->query("SELECT id, nome, descricao FROM setores WHERE ativo = 1 ORDER BY nome")
+    ->fetchAll(PDO::FETCH_ASSOC);
+?>
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 
@@ -80,6 +86,20 @@
                                     placeholder="Ex: Rua Principal, 123 - Bairro Centro" required>
                             </div>
 
+                            <div class="mb-4">
+                                <label for="setor_id" class="form-label fw-semibold">
+                                    <i class="bi bi-building me-1"></i>Setor Responsável <span class="text-danger">*</span>
+                                </label>
+                                <select class="form-select" id="setor_id" name="setor_id" required>
+                                    <option value="">Selecione o setor que deve atender...</option>
+                                    <?php foreach ($setores as $s): ?>
+                                        <option value="<?= (int)$s['id'] ?>">
+                                            <?= htmlspecialchars($s['nome']) ?> — <?= htmlspecialchars($s['descricao']) ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+
                             <!-- Níveis de Urgência -->
                             <div class="mb-3">
                                 <label class="form-label fw-semibold d-block">
@@ -137,7 +157,7 @@
 
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src= "js/solicitacao.js"></script>
+    <script src="js/solicitacao.js"></script>
 </body>
 
 </html>

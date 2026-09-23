@@ -71,10 +71,12 @@ function CriarSolicitacao(event) {
     const telefone = document.getElementById('telefone').value;
     const endereco = document.getElementById('endereco').value;
     const prioridadeSelected = document.querySelector('input[name="prioridade"]:checked');
+    const setorSelect = document.getElementById('setor_id');
+    const setorId = setorSelect ? setorSelect.value : '';
 
     // Validação dos campos no Front-end
-    if (!solicitante || !solicitacao || !telefone || !endereco || !prioridadeSelected) {
-        exibirErro('Por favor, preencha todos os campos obrigatórios.');
+    if (!solicitante || !solicitacao || !telefone || !endereco || !prioridadeSelected || !setorId) {
+        exibirErro('Por favor, preencha todos os campos obrigatórios (incluindo o setor).');
         return;
     }
 
@@ -98,91 +100,92 @@ function CriarSolicitacao(event) {
     formData.append('telefone', telefone);
     formData.append('endereco', endereco);
     formData.append('prioridade', prioridade);
+    formData.append('setor_id', setorId);
 
     // Requisição HTTP para a API
     fetch('api/criar_solicitacao.php', {
-            method: 'POST',
-            body: formData
+        method: 'POST',
+        body: formData
     })
-    .then(async response => {
-        const text = await response.text();
+        .then(async response => {
+            const text = await response.text();
 
-        if (!response.ok) {
-            try {
-                const jsonErr = JSON.parse(text);
-                throw new Error(jsonErr.erro || `Erro HTTP ${response.status}`);
-            } catch (e) {
-                throw new Error(text || `Erro HTTP ${response.status}`);
-            }
-        }
-
-        try {
-            return JSON.parse(text);
-        } catch (e) {
-            throw new Error("Resposta inválida do servidor. Verifique o console.");
-        }
-    })
-    .then(data => {
-        console.log('Sucesso:', data);
-
-        // 1. Reseta e oculta o formulário
-        const formulario = document.getElementById('formulario-solicitacao');
-        if (formulario) {
-            formulario.reset();
-            formulario.style.display = 'none';
-        }
-
-        // 2. Exibe a mensagem de alerta (Flexbox)
-        const alertBox = document.getElementById('alert');
-        if (alertBox) {
-            alertBox.classList.remove('d-none');
-            alertBox.classList.add('d-flex');
-        }
-
-        // 3. Ação do Botão OK
-        const btnOk = document.getElementById('btn-ok-sucesso');
-        if (btnOk) {
-            btnOk.onclick = function() {
-                // Se a solicitação foi enviada de dentro de um IFRAME/MODAL no Painel Admin
-                if (window.self !== window.top) {
-                    try {
-                        // 1. Tenta atualizar a tabela do admin sem recarregar a página (se houver uma função para isso)
-                        if (typeof window.top.carregarSolicitacoes === 'function') {
-                            window.top.carregarSolicitacoes();
-                        }
-
-                        // 2. Busca a instância do Modal do Bootstrap no documento pai e fecha
-                        const modalElement = window.top.document.querySelector('.modal.show');
-                        if (modalElement && window.top.bootstrap) {
-                            const modalInstance = window.top.bootstrap.Modal.getInstance(modalElement);
-                            if (modalInstance) {
-                                modalInstance.hide();
-                                return;
-                            }
-                        }
-                    } catch (err) {
-                        console.error('Erro ao fechar modal via JS:', err);
-                    }
-
-                    // Fallback caso não consiga fechar via Bootstrap JS: clica no botão de fechar (X) do modal no pai
-                    const btnFecharModal = window.top.document.querySelector(
-                        '.modal.show .btn-close, .modal.show [data-bs-dismiss="modal"]');
-                    if (btnFecharModal) {
-                        btnFecharModal.click();
-                    } else {
-                        // Se tudo falhar, recarrega só a página pai
-                        window.top.location.reload();
-                    }
-                    return;
+            if (!response.ok) {
+                try {
+                    const jsonErr = JSON.parse(text);
+                    throw new Error(jsonErr.erro || `Erro HTTP ${response.status}`);
+                } catch (e) {
+                    throw new Error(text || `Erro HTTP ${response.status}`);
                 }
+            }
 
-                // Se estiver na tela pública (fora do Iframe), redireciona para a Home pública
-                window.location.href = '/';
-            };
-        }
-    })
-    .catch(error => {
-        console.error('Erro na requisição:', error);
-        exibirErro(error.message || 'Ocorreu um erro ao enviar sua solicitação. Tente novamente.');
-    });
+            try {
+                return JSON.parse(text);
+            } catch (e) {
+                throw new Error("Resposta inválida do servidor. Verifique o console.");
+            }
+        })
+        .then(data => {
+            console.log('Sucesso:', data);
+
+            // 1. Reseta e oculta o formulário
+            const formulario = document.getElementById('formulario-solicitacao');
+            if (formulario) {
+                formulario.reset();
+                formulario.style.display = 'none';
+            }
+
+            // 2. Exibe a mensagem de alerta (Flexbox)
+            const alertBox = document.getElementById('alert');
+            if (alertBox) {
+                alertBox.classList.remove('d-none');
+                alertBox.classList.add('d-flex');
+            }
+
+            // 3. Ação do Botão OK
+            const btnOk = document.getElementById('btn-ok-sucesso');
+            if (btnOk) {
+                btnOk.onclick = function () {
+                    // Se a solicitação foi enviada de dentro de um IFRAME/MODAL no Painel Admin
+                    if (window.self !== window.top) {
+                        try {
+                            // 1. Tenta atualizar a tabela do admin sem recarregar a página (se houver uma função para isso)
+                            if (typeof window.top.carregarSolicitacoes === 'function') {
+                                window.top.carregarSolicitacoes();
+                            }
+
+                            // 2. Busca a instância do Modal do Bootstrap no documento pai e fecha
+                            const modalElement = window.top.document.querySelector('.modal.show');
+                            if (modalElement && window.top.bootstrap) {
+                                const modalInstance = window.top.bootstrap.Modal.getInstance(modalElement);
+                                if (modalInstance) {
+                                    modalInstance.hide();
+                                    return;
+                                }
+                            }
+                        } catch (err) {
+                            console.error('Erro ao fechar modal via JS:', err);
+                        }
+
+                        // Fallback caso não consiga fechar via Bootstrap JS: clica no botão de fechar (X) do modal no pai
+                        const btnFecharModal = window.top.document.querySelector(
+                            '.modal.show .btn-close, .modal.show [data-bs-dismiss="modal"]');
+                        if (btnFecharModal) {
+                            btnFecharModal.click();
+                        } else {
+                            // Se tudo falhar, recarrega só a página pai
+                            window.top.location.reload();
+                        }
+                        return;
+                    }
+
+                    // Se estiver na tela pública (fora do Iframe), redireciona para a Home pública
+                    window.location.href = '/';
+                };
+            }
+        })
+        .catch(error => {
+            console.error('Erro na requisição:', error);
+            exibirErro(error.message || 'Ocorreu um erro ao enviar sua solicitação. Tente novamente.');
+        });
 }
