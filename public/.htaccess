@@ -5,6 +5,7 @@ RewriteBase /
 RewriteRule ^solicitacao/?$ solicitacao.php [NC,L]
 RewriteRule ^login/?$ login.php [NC,L]
 RewriteRule ^admin/?$ admin.php [NC,L]
+RewriteRule ^admin/usuarios/?$ admin_usuarios.php [NC,L]
 
 # Api
 RewriteRule ^api/criar-solicitacao/?$ api/criar_solicitacao.php [QSA,L]
