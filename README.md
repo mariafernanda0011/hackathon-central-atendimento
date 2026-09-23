@@ -69,36 +69,37 @@ Como a tabela de administradores é iniciada vazia, crie um arquivo temporário 
 
 ```php
 <?php
-    require_once __DIR__ . '/config/database.php';
+require_once __DIR__ . '/config/database.php';
 
-    $nome = 'Administrador Local';
-    $email = 'admin@central.local';
-    $senhaTextoPuro = 'admin123';
+$admins = [
+    ['Administrador Geral', 'admin@central.local',     'admin123',  'geral', null],
+    ['Central Bombeiros',   'bombeiros@central.local', 'setor123',  'setor', 'bombeiros'],
+    ['Central Polícia',     'policia@central.local',   'setor123',  'setor', 'policia'],
+    ['Central SAMU',        'samu@central.local',      'setor123',  'setor', 'samu'],
+];
 
-    $senhaHash = password_hash($senhaTextoPuro, PASSWORD_DEFAULT);
-
-    try {
-        $checkStmt = $pdo->prepare("SELECT id FROM administradores WHERE email = :email LIMIT 1");
-        $checkStmt->execute([':email' => $email]);
-
-        if ($checkStmt -> fetch()){
-            echo "AVISO: O Administrador ($email) já está cadastrado no banco de dados. <br>\n";
-        } else {
-            $stmt = $pdo->prepare("INSERT INTO administradores (nome, email, senha) VALUES (:nome, :email, :senha)");
-            $stmt->execute([
-                ':nome'  => $nome,
-                ':email' => $email,
-                ':senha' => $senhaHash
-            ]);
-            echo "Administrador criado com sucesso!\n";
-            echo "Email: admin@central.local\n";
-            echo "Senha: admin123\n";
-        }
-    } catch (PDOException $e) {
-        echo "Erro ao criar administrador: " . $e->getMessage() . "\n";
+foreach ($admins as [$nome, $email, $senha, $tipo, $slugSetor]) {
+    $setorId = null;
+    if ($slugSetor) {
+        $q = $pdo->prepare("SELECT id FROM setores WHERE slug = :s");
+        $q->execute([':s' => $slugSetor]);
+        $setorId = $q->fetchColumn() ?: null;
     }
 
-?>
+    $stmt = $pdo->prepare("INSERT INTO administradores (nome, email, senha, tipo, setor_id)
+                           VALUES (:nome, :email, :senha, :tipo, :setor_id)
+                           ON DUPLICATE KEY UPDATE nome=VALUES(nome), senha=VALUES(senha),
+                                                   tipo=VALUES(tipo), setor_id=VALUES(setor_id)");
+    $stmt->execute([
+        ':nome'     => $nome,
+        ':email'    => $email,
+        ':senha'    => password_hash($senha, PASSWORD_BCRYPT),
+        ':tipo'     => $tipo,
+        ':setor_id' => $setorId,
+    ]);
+    echo "OK: $email ($tipo)\n";
+}
+
 ```
 
 2. Execute o comando no terminal a partir da raiz do projeto para cadastrar o usuário: 
