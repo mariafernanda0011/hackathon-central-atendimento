@@ -1,35 +1,45 @@
 <?php
-    session_start();
+session_start();
 
-    if (!isset($_SESSION['usuario_logado'])) {
-        header("Location: /login");
-        exit();
-    }
-    // Conecta ao BD
-    require_once __DIR__ . '/../database/database_setup.php';
+if (!isset($_SESSION['usuario_logado'])) {
+    header("Location: /login");
+    exit();
+}
+// Conecta ao BD
+require_once __DIR__ . '/../database/database_setup.php';
 
-    // Busca chamados e junta com a tabela administradores
-    $sql = "SELECT s.*, a.nome AS nome_admin 
-            FROM solicitacoes s 
-            LEFT JOIN administradores a ON s.admin_id = a.id 
-            ORDER BY s.id DESC";
-            
-    $stmt = $pdo->query($sql);
-    $solicitacoes =$stmt->fetchAll(PDO::FETCH_ASSOC);
+// Busca chamados e junta com a tabela administradores
+$sessao     = $_SESSION['usuario_logado'];
+$tipoAdmin  = $sessao['tipo'] ?? 'geral';
+$setorAdmin = $sessao['setor_id'] ?? null;
 
-    // Cálculo dinâmico dos contadores dos cards
-    $urgentes = 0;
-    $importantes = 0;
-    $normais = 0;
+$baseSelect = "SELECT s.*, a.nome AS nome_admin, st.nome AS nome_setor
+               FROM solicitacoes s
+               LEFT JOIN administradores a ON s.admin_id = a.id
+               LEFT JOIN setores st        ON s.setor_id = st.id";
 
-    foreach ($solicitacoes as$chamado) {
-        if ($chamado['classe'] === 'Urgente')$urgentes++;
-        elseif ($chamado['classe'] === 'Importante')$importantes++;
-        elseif ($chamado['classe'] === 'Normal')$normais++;
-    }
+if ($tipoAdmin === 'setor' && $setorAdmin) {
+    $stmt = $pdo->prepare($baseSelect . " WHERE s.setor_id = :setor ORDER BY s.id DESC");
+    $stmt->execute([':setor' => $setorAdmin]);
+} else {
+    $stmt = $pdo->query($baseSelect . " ORDER BY s.id DESC");
+}
+$solicitacoes = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    $total_chamados = count($solicitacoes);
+// Cálculo dinâmico dos contadores dos cards
+$urgentes = 0;
+$importantes = 0;
+$normais = 0;
+
+foreach ($solicitacoes as $chamado) {
+    if ($chamado['classe'] === 'Urgente') $urgentes++;
+    elseif ($chamado['classe'] === 'Importante') $importantes++;
+    elseif ($chamado['classe'] === 'Normal') $normais++;
+}
+
+$total_chamados = count($solicitacoes);
 ?>
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 
@@ -52,7 +62,15 @@
             </a>
             <div class="d-flex align-items-center gap-3">
                 <span class="text-light small d-none d-sm-inline">
-                    <i class="bi bi-person-circle me-1"></i> Operador
+                    <i class="bi bi-person-circle me-1"></i>
+                    <?= htmlspecialchars($_SESSION['usuario_logado']['nome']) ?>
+                    <?php if (($_SESSION['usuario_logado']['tipo'] ?? 'geral') === 'geral'): ?>
+                        <span class="badge bg-primary ms-1">Geral</span>
+                    <?php else: ?>
+                        <span class="badge bg-info text-dark ms-1">
+                            <?= htmlspecialchars($chamadoSetorNome ?? 'Setor') ?>
+                        </span>
+                    <?php endif; ?>
                 </span>
                 <a href="/api/logout" class="btn btn-outline-light btn-sm">
                     <i class="bi bi-box-arrow-right me-1"></i> Sair
@@ -70,10 +88,19 @@
                 </h1>
                 <p class="text-muted small mb-0">Triagem e acompanhamento dos chamados emergenciais cadastrados.</p>
             </div>
-            <button type="button" class="btn btn-primary btn-sm fw-bold" data-bs-toggle="modal"
-                data-bs-target="#modalNovoChamado">
-                <i class="bi bi-plus-lg me-1"></i> Nova Solicitação
-            </button>
+
+            <div class="d-flex gap-2">
+                <?php if (($_SESSION['usuario_logado']['tipo'] ?? 'geral') === 'geral'): ?>
+                    <a href="/admin_usuarios.php" class="btn btn-outline-primary btn-sm fw-bold">
+                        <i class="bi bi-people me-1"></i> Admins por Setor
+                    </a>
+                <?php endif; ?>
+
+                <button type="button" class="btn btn-primary btn-sm fw-bold" data-bs-toggle="modal"
+                    data-bs-target="#modalNovoChamado">
+                    <i class="bi bi-plus-lg me-1"></i> Nova Solicitação
+                </button>
+            </div>
         </div>
 
         <div class="modal fade" id="modalNovoChamado" tabindex="-1" aria-hidden="true">
@@ -143,6 +170,7 @@
                                 <th scope="col">Solicitante</th>
                                 <th scope="col">Descrição</th>
                                 <th scope="col">Contato / Endereço</th>
+                                <th scope="col">Setor</th>
                                 <th scope="col">Urgência</th>
                                 <th scope="col">Status</th>
                                 <th scope="col" class="text-end pe-4">Ações</th>
@@ -150,66 +178,67 @@
                         </thead>
                         <tbody class="small">
                             <?php if (empty($solicitacoes)): ?>
-                            <tr>
-                                <td colspan="7" class="text-center py-4 text-muted">Nenhuma solicitação cadastrada até o momento.</td>
-                            </tr>
-                            <?php else: ?>
-                                <?php foreach ($solicitacoes as$chamado): ?>
-                                <tr id="linha-<?= $chamado['id']; ?>">
-                                    <td class="ps-4 text-nowrap text-muted">
-                                        <?= date('d/m/Y H:i', strtotime($chamado['data_criacao'])); ?>
-                                    </td>
-                                    <td class="fw-semibold text-dark"><?= htmlspecialchars($chamado['nome_solicitante']); ?>
-                                    </td>
-                                    <td>
-                                        <div style="max-width: 230px;" class="text-truncate"
-                                            title="<?= htmlspecialchars($chamado['descricao']); ?>">
-                                            <?= htmlspecialchars($chamado['descricao']); ?>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div><i
-                                                class="bi bi-telephone me-1 text-muted"></i><?= htmlspecialchars($chamado['contato']); ?>
-                                        </div>
-                                        <div class="text-muted"><i
-                                                class="bi bi-geo-alt me-1"></i><?= htmlspecialchars($chamado['endereco']); ?>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <?php if ($chamado['classe'] === 'Urgente'): ?>
-                                        <span class="badge bg-danger">URGENTE</span>
-                                        <?php elseif ($chamado['classe'] === 'Importante'): ?>
-                                        <span class="badge bg-warning text-dark">IMPORTANTE</span>
-                                        <?php else: ?>
-                                        <span class="badge bg-info text-dark">NORMAL</span>
-                                        <?php endif; ?>
-                                    </td>
-                                    <td>
-                                        <span class="badge-status-<?= $chamado['id']; ?>">
-                                            <?php if ($chamado['status'] === 'Pendente'): ?>
-                                            <span class="badge bg-secondary">Pendente</span>
-                                            <?php elseif ($chamado['status'] === 'Em Atendimento'): ?>
-                                            <span class="badge bg-primary">Em Atendimento</span>
-                                            <?php else: ?>
-                                            <span class="badge bg-success">Concluído</span>
-                                            <?php endif; ?>
-                                        </span>
-                                    </td>
-                                    <td class="text-end pe-4">
-                                        <div class="btn-group btn-group-sm" role="group">
-                                            <!-- Botão Ver Detalhes (Olho) -->
-                                            <button type="button" class="btn btn-outline-secondary" title="Ver Detalhes"
-                                                onclick="abrirModalDetalhesPorId(<?= $chamado['id']; ?>)">
-                                                <i class="bi bi-eye"></i>
-                                            </button>
-                                            <!-- Botão Alterar Status (Lápis) -->
-                                            <button type="button" class="btn btn-outline-primary" title="Alterar Status"
-                                                onclick="abrirModalStatus(<?= $chamado['id']; ?>, '<?=$chamado['status']; ?>')">
-                                                <i class="bi bi-pencil"></i>
-                                            </button>
-                                        </div>
-                                    </td>
+                                <tr>
+                                    <td colspan="8" class="text-center py-4 text-muted">Nenhuma solicitação cadastrada até o momento.</td>
                                 </tr>
+                            <?php else: ?>
+                                <?php foreach ($solicitacoes as $chamado): ?>
+                                    <tr id="linha-<?= $chamado['id']; ?>">
+                                        <td class="ps-4 text-nowrap text-muted">
+                                            <?= date('d/m/Y H:i', strtotime($chamado['data_criacao'])); ?>
+                                        </td>
+                                        <td class="fw-semibold text-dark"><?= htmlspecialchars($chamado['nome_solicitante']); ?>
+                                        </td>
+                                        <td>
+                                            <div style="max-width: 230px;" class="text-truncate"
+                                                title="<?= htmlspecialchars($chamado['descricao']); ?>">
+                                                <?= htmlspecialchars($chamado['descricao']); ?>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div><i
+                                                    class="bi bi-telephone me-1 text-muted"></i><?= htmlspecialchars($chamado['contato']); ?>
+                                            </div>
+                                            <div class="text-muted"><i
+                                                    class="bi bi-geo-alt me-1"></i><?= htmlspecialchars($chamado['endereco']); ?>
+                                            </div>
+                                        </td>
+                                        <td><?= htmlspecialchars($chamado['nome_setor'] ?? '—') ?></td>
+                                        <td>
+                                            <?php if ($chamado['classe'] === 'Urgente'): ?>
+                                                <span class="badge bg-danger">URGENTE</span>
+                                            <?php elseif ($chamado['classe'] === 'Importante'): ?>
+                                                <span class="badge bg-warning text-dark">IMPORTANTE</span>
+                                            <?php else: ?>
+                                                <span class="badge bg-info text-dark">NORMAL</span>
+                                            <?php endif; ?>
+                                        </td>
+                                        <td>
+                                            <span class="badge-status-<?= $chamado['id']; ?>">
+                                                <?php if ($chamado['status'] === 'Pendente'): ?>
+                                                    <span class="badge bg-secondary">Pendente</span>
+                                                <?php elseif ($chamado['status'] === 'Em Atendimento'): ?>
+                                                    <span class="badge bg-primary">Em Atendimento</span>
+                                                <?php else: ?>
+                                                    <span class="badge bg-success">Concluído</span>
+                                                <?php endif; ?>
+                                            </span>
+                                        </td>
+                                        <td class="text-end pe-4">
+                                            <div class="btn-group btn-group-sm" role="group">
+                                                <!-- Botão Ver Detalhes (Olho) -->
+                                                <button type="button" class="btn btn-outline-secondary" title="Ver Detalhes"
+                                                    onclick="abrirModalDetalhesPorId(<?= $chamado['id']; ?>)">
+                                                    <i class="bi bi-eye"></i>
+                                                </button>
+                                                <!-- Botão Alterar Status (Lápis) -->
+                                                <button type="button" class="btn btn-outline-primary" title="Alterar Status"
+                                                    onclick="abrirModalStatus(<?= $chamado['id']; ?>, '<?= $chamado['status']; ?>')">
+                                                    <i class="bi bi-pencil"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
                                 <?php endforeach; ?>
                             <?php endif; ?>
                         </tbody>
@@ -335,7 +364,7 @@
         function abrirModalDetalhes(chamado) {
             document.getElementById('detalhes-id').textContent = chamado.id || '-';
             document.getElementById('detalhes-solicitante').textContent = chamado.nome_solicitante || 'Não informado';
-            
+
             // Formatador de Data/Hora
             if (chamado.data_criacao) {
                 const dataObj = new Date(chamado.data_criacao);
