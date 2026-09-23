@@ -15,17 +15,17 @@
             ORDER BY s.id DESC";
             
     $stmt = $pdo->query($sql);
-    $solicitacoes = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $solicitacoes =$stmt->fetchAll(PDO::FETCH_ASSOC);
 
     // Cálculo dinâmico dos contadores dos cards
     $urgentes = 0;
     $importantes = 0;
     $normais = 0;
 
-    foreach ($solicitacoes as $chamado) {
-        if ($chamado['classe'] === 'Urgente') $urgentes++;
-        elseif ($chamado['classe'] === 'Importante') $importantes++;
-        elseif ($chamado['classe'] === 'Normal') $normais++;
+    foreach ($solicitacoes as$chamado) {
+        if ($chamado['classe'] === 'Urgente')$urgentes++;
+        elseif ($chamado['classe'] === 'Importante')$importantes++;
+        elseif ($chamado['classe'] === 'Normal')$normais++;
     }
 
     $total_chamados = count($solicitacoes);
@@ -154,7 +154,7 @@
                                 <td colspan="7" class="text-center py-4 text-muted">Nenhuma solicitação cadastrada até o momento.</td>
                             </tr>
                             <?php else: ?>
-                                <?php foreach ($solicitacoes as $chamado): ?>
+                                <?php foreach ($solicitacoes as$chamado): ?>
                                 <tr id="linha-<?= $chamado['id']; ?>">
                                     <td class="ps-4 text-nowrap text-muted">
                                         <?= date('d/m/Y H:i', strtotime($chamado['data_criacao'])); ?>
@@ -199,12 +199,12 @@
                                         <div class="btn-group btn-group-sm" role="group">
                                             <!-- Botão Ver Detalhes (Olho) -->
                                             <button type="button" class="btn btn-outline-secondary" title="Ver Detalhes"
-                                                onclick='abrirModalDetalhes(<?= json_encode($chamado, JSON_HEX_APOS | JSON_HEX_QUOT); ?>)'>
+                                                onclick="abrirModalDetalhesPorId(<?= $chamado['id']; ?>)">
                                                 <i class="bi bi-eye"></i>
                                             </button>
                                             <!-- Botão Alterar Status (Lápis) -->
                                             <button type="button" class="btn btn-outline-primary" title="Alterar Status"
-                                                onclick="abrirModalStatus(<?= $chamado['id']; ?>, '<?= $chamado['status']; ?>')">
+                                                onclick="abrirModalStatus(<?= $chamado['id']; ?>, '<?=$chamado['status']; ?>')">
                                                 <i class="bi bi-pencil"></i>
                                             </button>
                                         </div>
@@ -242,10 +242,10 @@
                             <span id="detalhes-data" class="text-dark"></span>
                         </div>
 
-                        <!-- NOVO CAMPO: Administrador Responsável -->
+                        <!-- CAMPO: Origem da Criacao / Tipo de Usuario -->
                         <div class="col-md-6">
-                            <strong class="text-muted d-block small">Cadastrado Por :</strong>
-                            <span id="detalhes-admin" class="text-dark fw-semibold"></span>
+                            <strong class="text-muted d-block small">Cadastrado Por:</strong>
+                            <span id="detalhes-admin" class="text-dark"></span>
                         </div>
 
                         <div class="col-md-6">
@@ -322,6 +322,65 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         const solicitaesData = <?= json_encode($solicitacoes, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>;
+
+        // Busca a solicitação pelo ID no array global
+        function abrirModalDetalhesPorId(id) {
+            const chamado = solicitaesData.find(item => Number(item.id) === Number(id));
+            if (chamado) {
+                abrirModalDetalhes(chamado);
+            }
+        }
+
+        // Preenche e abre a Modal de Detalhes
+        function abrirModalDetalhes(chamado) {
+            document.getElementById('detalhes-id').textContent = chamado.id || '-';
+            document.getElementById('detalhes-solicitante').textContent = chamado.nome_solicitante || 'Não informado';
+            
+            // Formatador de Data/Hora
+            if (chamado.data_criacao) {
+                const dataObj = new Date(chamado.data_criacao);
+                document.getElementById('detalhes-data').textContent = dataObj.toLocaleString('pt-BR');
+            } else {
+                document.getElementById('detalhes-data').textContent = '-';
+            }
+
+            // Exibe se foi criado por um Usuário Comum ou por um Administrador
+            const elemAdmin = document.getElementById('detalhes-admin');
+            if (chamado.nome_admin) {
+                elemAdmin.innerHTML = `<span class="fw-semibold text-dark">${chamado.nome_admin}</span> <span class="badge bg-dark ms-1">Administrativo</span>`;
+            } else {
+                elemAdmin.innerHTML = `<span class="badge bg-secondary">Usuário Comum</span> <span class="text-muted small">(Autoatendimento)</span>`;
+            }
+
+            document.getElementById('detalhes-contato').textContent = chamado.contato || 'Não informado';
+            document.getElementById('detalhes-endereco').textContent = chamado.endereco || 'Não informado';
+            document.getElementById('detalhes-descricao').textContent = chamado.descricao || 'Sem descrição.';
+
+            // Renderiza Badge de Urgência
+            const containerUrgencia = document.getElementById('detalhes-urgencia');
+            if (chamado.classe === 'Urgente') {
+                containerUrgencia.innerHTML = '<span class="badge bg-danger">URGENTE</span>';
+            } else if (chamado.classe === 'Importante') {
+                containerUrgencia.innerHTML = '<span class="badge bg-warning text-dark">IMPORTANTE</span>';
+            } else {
+                containerUrgencia.innerHTML = '<span class="badge bg-info text-dark">NORMAL</span>';
+            }
+
+            // Renderiza Badge de Status
+            const containerStatus = document.getElementById('detalhes-status');
+            if (chamado.status === 'Pendente') {
+                containerStatus.innerHTML = '<span class="badge bg-secondary">Pendente</span>';
+            } else if (chamado.status === 'Em Atendimento') {
+                containerStatus.innerHTML = '<span class="badge bg-primary">Em Atendimento</span>';
+            } else {
+                containerStatus.innerHTML = '<span class="badge bg-success">Concluído</span>';
+            }
+
+            // Exibe o Modal
+            const modalElement = document.getElementById('modalDetalhes');
+            const modalInstance = bootstrap.Modal.getOrCreateInstance(modalElement);
+            modalInstance.show();
+        }
     </script>
     <script src="js/painel_admin.js"></script>
 </body>
